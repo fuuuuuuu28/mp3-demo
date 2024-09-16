@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="output.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+      integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w=="
+      crossorigin="anonymous"
+    />
+  </head>
+  <body class="bg-[#170E22] h-[100px] relative">
+    <div class="w-[500px] mx-auto">
+      <div class="flex justify-center mt-[10%] text-white text-center">
+        <header>
+          Now playing:
+          <h2>Audio Test</h2>
+        </header>
+      </div>
+      <!-- CD -->
+      <div class="flex w-[200px] m-auto">
+        <div class="cd w-[100%] pt-[100%] bg-cover rounded-full m-auto"></div>
+      </div>
+
+      <!-- CONTROL -->
+      <div
+        class="text-gray-400 flex justify-around items-center mt-[10%] bg-white w-[full] h-[50px] rounded-lg"
+      >
+        <div class="btn-repeat fas fa-redo fa-lg"></div>
+        <div class="btn-prev fas fa-step-backward fa-lg"></div>
+        <div class="btn-toggle-pause hidden">
+          <div class="icon-pause fas fa-pause fa-lg"></div>
+        </div>
+        <div class="btn-toggle-play">
+          <div class="icon-play fas fa-play fa-lg"></div>
+        </div>
+        <div class="btn-next fas fa-step-forward fa-lg"></div>
+        <div class="btn-random fas fa-random fa-lg"></div>
+      </div>
+      <!-- Line -->
+      <div class="flex justify-center m-3">
+        <input
+          id="progress"
+          class="no-appearance transition-webkit w-[70%] h-2 cursor-pointer rounded-lg range-slider"
+          type="range"
+          value="0"
+          step="1"
+          min="0"
+          max="100"
+        />
+      </div>
+      <!-- AUDIO -->
+      <audio id="audio" src=""></audio>
+      <!-- PLAYLIST -->
+      <div class="playlist mt-[80px]"></div>
+    </div>
+
+    <!-- Side bar -->
+    <div
+      class="Sidebar bg-[#231A2F] text-gray-300 fixed w-[60px] h-screen top-0 left-0 duration-150 ease-in"
+    >
+      <div class="flex flex-col items-center h-[50px] w-[100%] mt-6 space-y-4">
+        <div class="py-5">
+          <div class="fas fa-music fa-2x hover:text-white">
+            <span class="content-icon hidden opacity-0 ">Music</span>
+          </div>
+        </div>
+        <div class="fa fa-star fa-lg hover:text-white">
+          <span class="content-icon hidden opacity-0 ">Favorites</span>
+        </div>
+        <div class="fa fa-heart fa-lg hover:text-white">
+          <span class="content-icon hidden opacity-0">Liked</span>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    const $ = document.querySelector.bind(document);
+    const $$ = document.querySelectorAll.bind(document);
+
+    const PLAYER_STORAGE_KEY = "F8_PLAYER";
+
+    const cd = $(".cd");
+    const heading = $("header h2");
+    const audio = $("#audio");
+    const play = $(".play");
+    const playBtn = $(".btn-toggle-play");
+    const pauseBtn = $(".btn-toggle-pause");
+    const progress = $("#progress");
+    const nextBtn = $(".btn-next");
+    const prevBtn = $(".btn-prev");
+    const randomBtn = $(".btn-random");
+    const repeatBtn = $(".btn-repeat");
+    const playlist = $(".playlist");
+    const side = $(".Sidebar");
+    const sideContents = $$(".content-icon");
+    // const cdThumb=$('.cd-thumb')
+
+    const app = {
+      currentIndex: 0,
+      isPlaying: false,
+      isRandom: false,
+      isRepeat: false,
+      config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
+      songs: [
+        {
+          name: "Em khong khoc",
+          singer: "Vũ Trường Quân",
+          path: "./music/song1.mp3",
+          image: "./img/f6894526d7a599dd668ebc4704ffc9db.jpg",
+        },
+        {
+          name: "Em khong khoc 2",
+          singer: "Vũ Trường Quân",
+          path: "./music/song1.mp3",
+          image: "./img/f6894526d7a599dd668ebc4704ffc9db.jpg",
+        },
+        {
+          name: "Em khong khoc 3",
+          singer: "Vũ Trường Quân",
+          path: "./music/song1.mp3",
+          image: "./img/f6894526d7a599dd668ebc4704ffc9db.jpg",
+        },
+        {
+          name: "Em khong khoc 4",
+          singer: "Vũ Trường Quân",
+          path: "./music/song1.mp3",
+          image: "./img/f6894526d7a599dd668ebc4704ffc9db.jpg",
+        },
+        {
+          name: "Em khong khoc 5",
+          singer: "Vũ Trường Quân",
+          path: "./music/song1.mp3",
+          image: "./img/f6894526d7a599dd668ebc4704ffc9db.jpg",
+        },
+      ],
+      setConfig: function (key, value) {
+        this.config[key] = value;
+        localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(this.config));
+        console.log(localStorage.getItem(PLAYER_STORAGE_KEY));
+      },
+      render: function () {
+        const htmls = this.songs.map((song, index) => {
+          return `
+            <div class="song bg-white flex items-center p-3 mb-4 shadow-2xl rounded-lg
+            ${
+              index === this.currentIndex ? "bg-red2-500" : ""
+            }" data-index="${index}">
+              <div class="thumb h-[44px] w-[44px] bg-cover rounded-full m-2"
+                style="background-image: url('${song.image}')">
+              </div>
+              <div class="body flex-1">
+                <h3 class="title">${song.name}</h3>
+                <p class="author">${song.singer}</p>
+              </div>
+              <div class="option">
+                <i class="fas fa-ellipsis-h"></i>
+              </div>
+            </div>
+              `;
+        });
+        $(".playlist").innerHTML = htmls.join("");
+      },
+      defineProperties: function () {
+        Object.defineProperty(this, "currentSong", {
+          get: function () {
+            return this.songs[this.currentIndex];
+          },
+        });
+      },
+      handleEvent: function () {
+        const _this = this;
+        const cdWidth = cd.offsetWidth;
+        document.onscroll = function () {
+          const scrollTop =
+            document.documentElement.scrollTop || window.scrollY;
+          const newWidth = cdWidth - scrollTop;
+
+          cd.style.width = newWidth > 0 ? newWidth + "px" : 0;
+          cd.style.opacity = newWidth / cdWidth;
+        };
+
+        const cdThumb = cd.animate([{ transform: "rotate(360deg)" }], {
+          duration: 10000,
+          iterations: Infinity,
+        });
+        cdThumb.pause();
+
+        // PLAY - PAUSE
+        playBtn.onclick = function () {
+          audio.play();
+        };
+        pauseBtn.onclick = function () {
+          audio.pause();
+        };
+
+        // AUDIO
+        audio.onplay = function () {
+          _this.isPlaying = true;
+          $(".btn-toggle-pause").classList.remove("hidden");
+          $(".btn-toggle-play").classList.add("hidden");
+          cdThumb.play();
+        };
+        audio.onpause = function () {
+          _this.isPlaying = false;
+          $(".btn-toggle-play").classList.remove("hidden");
+          $(".btn-toggle-pause").classList.add("hidden");
+          cdThumb.pause();
+        };
+        audio.ontimeupdate = function () {
+          if (audio.duration) {
+            let progressPercent = Math.floor(
+              (audio.currentTime / audio.duration) * 100
+            );
+            progress.value = progressPercent;
+          }
+        };
+        progress.onchange = function (e) {
+          const seekTime = (audio.duration / 100) * e.target.value;
+          audio.currentTime = seekTime;
+        };
+
+        // BUTTON
+        nextBtn.onclick = function () {
+          if (_this.isRandom) {
+            _this.randomSong();
+          } else {
+            _this.nextSong();
+          }
+          _this.render();
+          audio.play();
+        };
+        prevBtn.onclick = function () {
+          if (_this.isRandom) {
+            _this.randomSong();
+          } else {
+            _this.prevSong();
+          }
+          _this.render();
+          audio.play();
+        };
+        randomBtn.onclick = function () {
+          _this.isRandom = !_this.isRandom;
+          _this.setConfig("isRandom", _this.isRandom);
+          randomBtn.classList.toggle("text-red-500", _this.isRandom);
+        };
+        repeatBtn.onclick = function () {
+          _this.isRepeat = !_this.isRepeat;
+          _this.setConfig("isRepeat", _this.isRepeat);
+          repeatBtn.classList.toggle("text-red-500", _this.isRepeat);
+        };
+
+        //
+        playlist.onclick = function (e) {
+          const songNode = e.target.closest(".song:not(.bg-red2-500)");
+          console.log(songNode);
+          if (songNode || e.target.closest(".option")) {
+            if (songNode) {
+              _this.currentIndex = Number(songNode.dataset.index);
+              _this.loadCurrentSong();
+              _this.render();
+              audio.play();
+            }
+          }
+        };
+
+        // Side bar
+        side.onclick = function () {
+          side.classList.toggle("w-[200px]"); // Toggle chiều rộng sidebar giữa 60px và 200px
+          side.classList.toggle("w-[60px]");
+
+          sideContents.forEach((content) => {
+            content.classList.toggle("hidden");
+            content.classList.remove("opacity-0")
+            content.classList.add("opacity-1")
+          });
+        };
+      },
+      loadCurrentSong: function () {
+        heading.textContent = this.currentSong.name;
+        cd.style.backgroundImage = `url('${this.currentSong.image}')`;
+        audio.src = this.currentSong.path;
+      },
+      nextSong: function () {
+        this.currentIndex++;
+        if (this.currentIndex >= this.songs.length) {
+          this.currentIndex = 0;
+        }
+        this.loadCurrentSong();
+      },
+      prevSong: function () {
+        this.currentIndex--;
+        console.log(this.currentIndex);
+        if (this.currentIndex < 0) {
+          this.currentIndex = this.songs.length - 1;
+        }
+        this.loadCurrentSong();
+      },
+      randomSong: function () {
+        let randomIndex;
+        do {
+          randomIndex = Math.floor(Math.random() * this.songs.length);
+        } while (randomIndex === this.currentIndex);
+
+        this.currentIndex = randomIndex;
+        this.loadCurrentSong();
+      },
+      start: function () {
+        this.defineProperties();
+        this.handleEvent();
+        this.loadCurrentSong();
+        this.render();
+      },
+    };
+    app.start();
+  </script>
+</html>
